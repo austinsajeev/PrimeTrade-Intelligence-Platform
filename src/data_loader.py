@@ -99,10 +99,19 @@ def load_trades() -> pd.DataFrame:
     df["fee_drag"]       = df["Fee"].fillna(0)
 
     # Short wallet address for display
-    df["Account_short"] = df["Account"].str[:6] + "…" + df["Account"].str[-4:]
+    df["Account_short"] = (df["Account"].str[:6] + "…" + df["Account"].str[-4:]).astype("category")
 
     # Normalize Direction column
-    df["Direction"] = df["Direction"].str.strip().str.title()
+    df["Direction"] = df["Direction"].str.strip().str.title().astype("category")
+
+    # Memory Optimization: Convert other string columns to categoricals
+    for cat_col in ["Account", "Symbol", "Event", "Side"]:
+        if cat_col in df.columns:
+            df[cat_col] = df[cat_col].astype("category")
+
+    # Drop original timestamp to save memory since we extracted what we need
+    if "Timestamp IST" in df.columns:
+        df = df.drop(columns=["Timestamp IST"])
 
     return df
 
