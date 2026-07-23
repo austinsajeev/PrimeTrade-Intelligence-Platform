@@ -14,7 +14,7 @@ import streamlit as st
 # ─── Paths ────────────────────────────────────────────────────────────────────
 ROOT_DIR = Path(__file__).parent.parent
 FEAR_GREED_PATH = ROOT_DIR / "fear_greed_index.csv"
-HISTORICAL_PATH = ROOT_DIR / "historical_data.csv"
+HISTORICAL_PATH = ROOT_DIR / "historical_data.parquet"
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 REGIME_ORDER = ["Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"]
@@ -73,13 +73,9 @@ def load_fear_greed() -> pd.DataFrame:
 @st.cache_data(show_spinner="⚡ Loading 211K+ trade records …")
 def load_trades() -> pd.DataFrame:
     """Load, clean and feature-engineer the Hyperliquid trade history."""
-    df = pd.read_csv(HISTORICAL_PATH, low_memory=False)
+    df = pd.read_parquet(HISTORICAL_PATH)
 
     # ── Timestamps ──────────────────────────────────────────────────────────
-    # Format in file: DD-MM-YYYY HH:MM  (e.g. 02-12-2024 22:50)
-    df["Timestamp IST"] = pd.to_datetime(
-        df["Timestamp IST"], format="%d-%m-%Y %H:%M", errors="coerce"
-    )
     df["trade_date"] = df["Timestamp IST"].dt.normalize()
     df["hour"]       = df["Timestamp IST"].dt.hour
     df["month_year"] = df["Timestamp IST"].dt.to_period("M").astype(str)
